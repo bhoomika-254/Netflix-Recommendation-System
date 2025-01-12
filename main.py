@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 from ast import literal_eval
-from surprise import Reader, Dataset, SVD
+from scikit-surprise import Reader, Dataset, SVD
 import ast
 
 # Cache implementation remains the same
@@ -239,5 +239,9 @@ def create_interface():
     return demo
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     demo = create_interface()
     demo.launch()
+=======
+    main()
+>>>>>>> 8c7aa701a1c283a01a075ed12422cab98f921adb
