@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 from ast import literal_eval
-from surprise import Reader, Dataset, SVD
+from scikit-surprise import Reader, Dataset, SVD
 import ast
 
 @st.cache_data
