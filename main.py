@@ -3,43 +3,87 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
-from ast import literal_eval
-from scikit-surprise import Reader, Dataset, SVD
-import ast
+from sklearn.decomposition import NMF
+from sklearn.preprocessing import StandardScaler
+import os
 
-# Cache implementation remains the same
+# Cache implementation
 _cached_movies = None
 _cached_ratings = None
 
-# Data loading functions remain the same
 def load_data():
     global _cached_movies
     if _cached_movies is not None:
         return _cached_movies
-        
-    credits = pd.read_csv("tmdb_5000_credits.csv")
-    movies = pd.read_csv("tmdb_5000_movies.csv")
-    credits.rename(columns={'movie_id': 'id'}, inplace=True)
-    credits['id'] = pd.to_numeric(credits['id'], errors='coerce')
-    credits = credits[credits['id'].apply(lambda x: isinstance(x, (int, float)) and not np.isnan(x))]
-    credits['id'] = credits['id'].astype(int)
-    movies['id'] = movies['id'].astype(int)
-    movies = movies.merge(credits, on='id', suffixes=('', '_credit'))
-    if 'title_credit' in movies.columns:
-        movies.drop(columns=['title_credit'], inplace=True)
-    movies.drop_duplicates(subset='title', inplace=True)
-    _cached_movies = movies
-    return movies
+    try:
+        credits = pd.read_csv("tmdb_5000_credits.csv")
+        movies = pd.read_csv("tmdb_5000_movies.csv")
+        credits.rename(columns={'movie_id': 'id'}, inplace=True)
+        credits['id'] = pd.to_numeric(credits['id'], errors='coerce')
+        credits = credits[credits['id'].apply(lambda x: isinstance(x, (int, float)) and not np.isnan(x))]
+        credits['id'] = credits['id'].astype(int)
+        movies['id'] = movies['id'].astype(int)
+        movies = movies.merge(credits, on='id', suffixes=('', '_credit'))
+        if 'title_credit' in movies.columns:
+            movies.drop(columns=['title_credit'], inplace=True)
+        movies.drop_duplicates(subset='title', inplace=True)
+        _cached_movies = movies
+        return movies
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        return None
 
 def load_ratings_data():
     global _cached_ratings
     if _cached_ratings is not None:
         return _cached_ratings
-    ratings = pd.read_csv("ratings_small.csv")
-    _cached_ratings = ratings
-    return ratings
+    try:
+        ratings = pd.read_csv("ratings_small.csv")
+        _cached_ratings = ratings
+        return ratings
+    except Exception as e:
+        print(f"Error loading ratings data: {e}")
+        return None
 
-# Core logic functions remain the same
+def predict_rating(user_id, movie_id):
+    try:
+        ratings = load_ratings_data()
+        if ratings is None:
+            return "Error: Could not load ratings data"
+        
+        # Create user-movie matrix
+        ratings_matrix = ratings.pivot(index='userId', 
+                                     columns='movieId', 
+                                     values='rating').fillna(0)
+        
+        # Check if user_id and movie_id exist in the matrix
+        if user_id not in ratings_matrix.index or movie_id not in ratings_matrix.columns:
+            return "Error: User ID or Movie ID not found in dataset"
+        
+        # Instead of StandardScaler, we'll normalize the data to [0,1] range
+        ratings_array = ratings_matrix.values
+        ratings_normalized = (ratings_array - ratings_array.min()) / (ratings_array.max() - ratings_array.min())
+        
+        # Apply NMF
+        nmf = NMF(n_components=50, init='random', random_state=42)
+        user_features = nmf.fit_transform(ratings_normalized)
+        movie_features = nmf.components_
+        
+        # Get user and movie indices
+        user_idx = ratings_matrix.index.get_loc(user_id)
+        movie_idx = ratings_matrix.columns.get_loc(movie_id)
+        
+        # Predict rating
+        prediction = np.dot(user_features[user_idx], movie_features[:, movie_idx])
+        
+        # Scale prediction back to original range [0.5, 5]
+        prediction = (prediction * (5 - 0.5)) + 0.5
+        prediction = max(0.5, min(5, prediction))  # Clip between 0.5 and 5
+        
+        return f"🎬 Predicted Rating: {prediction:.2f} / 5.0"
+    except Exception as e:
+        return f"Error during prediction: {str(e)}"
+
 def weighted_rating(x, m, C):
     v = x['vote_count']
     R = x['vote_average']
@@ -47,6 +91,9 @@ def weighted_rating(x, m, C):
 
 def get_top_rated_movies():
     movies = load_data()
+    if movies is None:
+        return "Error: Could not load movies data"
+    
     C = movies['vote_average'].mean()
     m = movies['vote_count'].quantile(0.9)
     q_movies = movies.copy().loc[movies['vote_count'] >= m]
@@ -64,6 +111,12 @@ def get_top_rated_movies():
 
 def get_recommendations(title):
     movies = load_data()
+    if movies is None:
+        return "Error: Could not load movies data"
+    
+    if title not in movies['title'].values:
+        return "Error: Movie not found in database"
+    
     tfidf = TfidfVectorizer(stop_words='english')
     movies['overview'] = movies['overview'].fillna('')
     tfidf_matrix = tfidf.fit_transform(movies['overview'])
@@ -77,17 +130,6 @@ def get_recommendations(title):
     recommendations = movies['title'].iloc[movie_indices]
     return "\n".join([f"{i+1}. {title}" for i, title in enumerate(recommendations)])
 
-def predict_rating(user_id, movie_id):
-    ratings = load_ratings_data()
-    reader = Reader()
-    data = Dataset.load_from_df(ratings[['userId', 'movieId', 'rating']], reader)
-    svd = SVD()
-    trainset = data.build_full_trainset()
-    svd.fit(trainset)
-    prediction = svd.predict(user_id, movie_id).est
-    return f"🎬 Predicted Rating: {prediction:.2f} / 5.0"
-
-# Custom CSS for Netflix theme
 custom_css = """
 #component-0 {
     max-width: 800px !important;
@@ -95,38 +137,31 @@ custom_css = """
     padding: 20px !important;
     background-color: #141414 !important;
 }
-
 .logo-container {
     text-align: center;
     margin: 0 !important;
 }
-
 .logo-image {
     max-width: 200px;
     margin: 0 !important;
 }
-
 .gradio-container {
     background-color: #141414 !important;
 }
-
 .tabs.svelte-710i53 {
     background-color: #141414 !important;
     border-bottom: 2px solid #DC1A22 !important;
     margin-bottom: 25px !important;
 }
-
 .tab-nav {
     background-color: #141414 !important;
     border: none !important;
     margin-bottom: 20px !important;
 }
-
 button.selected {
     background-color: #DC1A22 !important;
     color: white !important;
 }
-
 button {
     background-color: #DC1A22 !important;
     color: white !important;
@@ -138,11 +173,9 @@ button {
     transition: background-color 0.3s !important;
     margin: 10px 5px !important;
 }
-
 button:hover {
     background-color: #B2070E !important;
 }
-
 .input-box, .output-box, select, textarea {
     background-color: #242424 !important;
     border: 1px solid #DC1A22 !important;
@@ -151,32 +184,25 @@ button:hover {
     margin-top: 10px !important;
     margin-bottom: 15px !important;
 }
-
 label {
     color: #FFFFFF !important;
     margin-bottom: 8px !important;
 }
-
 .markdown {
     color: #FFFFFF !important;
     margin-bottom: 20px !important;
 }
-
 .tabs > div:first-child {
     border-bottom: 2px solid #DC1A22 !important;
     margin-bottom: 20px !important;
 }
-
 .tab-selected {
     color: #DC1A22 !important;
     border-bottom: 2px solid #DC1A22 !important;
 }
-
-/* Add space between elements */
 .block {
     margin-bottom: 20px !important;
 }
-
 .row {
     margin-bottom: 15px !important;
 }
@@ -184,9 +210,10 @@ label {
 
 def create_interface():
     movies = load_data()
+    if movies is None:
+        return gr.Blocks().queue()
     
     with gr.Blocks(css=custom_css, theme=gr.themes.Base()) as demo:
-        # Load and display logo using gr.Image
         gr.Image("nflogo.jpeg", show_label=False, container=False, scale=1, min_width=100, show_download_button=False, interactive=False, show_fullscreen_button=False)
         
         gr.Markdown("# Movie Recommendation System")
@@ -196,7 +223,7 @@ def create_interface():
             with gr.Tab("Top Rated"):
                 with gr.Column(scale=1):
                     demo_button = gr.Button("Show Top Rated Movies", scale=0.4)
-                    gr.Markdown("     ")  # Adding space
+                    gr.Markdown("     ")
                     demo_output = gr.Textbox(label="Results", lines=15)
                 demo_button.click(get_top_rated_movies, inputs=[], outputs=demo_output)
             
@@ -210,7 +237,7 @@ def create_interface():
                             scale=0.7
                         )
                         content_button = gr.Button("Get Recommendations", scale=0.3)
-                    gr.Markdown("     ")  # Adding space
+                    gr.Markdown("     ")
                     content_output = gr.Textbox(label="Recommended Movies", lines=10)
                 content_button.click(get_recommendations, inputs=[movie_dropdown], outputs=content_output)
             
@@ -232,7 +259,7 @@ def create_interface():
                             scale=0.3
                         )
                         predict_button = gr.Button("Predict", scale=0.2)
-                    gr.Markdown("     ")  # Adding space
+                    gr.Markdown("     ")
                     predict_output = gr.Textbox(label="Predicted Rating")
                 predict_button.click(predict_rating, inputs=[user_id, movie_id], outputs=predict_output)
     
