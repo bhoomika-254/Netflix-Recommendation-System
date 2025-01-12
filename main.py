@@ -239,9 +239,5 @@ def create_interface():
     return demo
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     demo = create_interface()
     demo.launch()
-=======
-    main()
->>>>>>> 8c7aa701a1c283a01a075ed12422cab98f921adb
