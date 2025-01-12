@@ -1,7 +1,7 @@
 # Netflix Recommendation System 🎥🍿
-This project is designed to provide personalized movie recommendations using three different techniques: Demographic Filtering, Content-Based Filtering, and Collaborative Filtering. The system is built using Python, Streamlit, and machine learning libraries like Scikit-learn and Surprise.
+A sophisticated movie recommendation system built with Python and Gradio, featuring a Netflix-inspired UI design. The system provides personalized movie recommendations, displays top-rated films, and predicts user ratings for movies.
 
-![image](https://github.com/user-attachments/assets/b05d8846-c58c-44d3-9b1a-e9b5106839e2)
+![image](https://github.com/user-attachments/assets/b968eb73-ce01-4dab-a25f-e500d429583b)
 
 # Features:
 - Netflix-Themed UI: A sleek and modern interface inspired by Netflix.
@@ -9,24 +9,20 @@ This project is designed to provide personalized movie recommendations using thr
   1. Demographic Filtering: Top-rated movies based on weighted ratings.
   2. Content-Based Filtering: Movies similar to a selected movie.
   3. Collaborative Filtering: Predicts a user's rating for a specific movie.
-- Interactive Interface: Built with Streamlit for easy interaction.
-- Detailed Output: Displays recommendations in a table with title, genres, type, and IMDb rating.
+- Interactive Interface: Built with Gradio for easy interaction.
 
 # Technologies Used :
-- Python: The core programming language used for the project.
-- Streamlit: For building the interactive web application.
-- Pandas: For data manipulation and analysis.
-- NumPy: For numerical computations.
-- Scikit-learn: For TF-IDF vectorization and cosine similarity.
-- Surprise: For collaborative filtering using the SVD algorithm.
-- CSS: Custom styling for the Netflix-inspired UI.
+- Python 3.9 - Core programming language
+- Gradio 4.14.0 - Web interface framework
+- NumPy 1.21.6 - Numerical computations and array operations
+- Pandas 2.0.3 - Data manipulation and analysis
+- Scikit-learn 1.3.0 - Machine learning algorithms and data processing
+    1. TF-IDF Vectorization
+    2. Non-negative Matrix Factorization (NMF)
+    3. Cosine Similarity
+- HTML/CSS - Custom styling for Netflix-like interface
 
 # Project Overview :
-The Netflix-Style Movie Recommendation System is a web-based application that leverages machine learning techniques to provide personalized movie recommendations. The system is built using Streamlit, a popular framework for creating interactive web applications, and incorporates three distinct recommendation methods:
-- Demographic Filtering:
-  This method recommends movies based on their overall popularity and ratings. It uses a weighted rating formula that balances the average rating and the number of votes to ensure that highly-rated movies with a significant number of votes are prioritized.
-- Content-Based Filtering:
-  This method recommends movies similar to a selected movie based on their overview (description). It uses TF-IDF (Term Frequency-Inverse Document Frequency) to vectorize the movie descriptions and cosine similarity to find movies with similar content.
-- Collaborative Filtering:
-  This method predicts a user's rating for a specific movie using the Singular Value Decomposition (SVD) algorithm. It analyzes user-movie interactions from a ratings dataset to make personalized predictions.
+This project implements a movie recommendation system with three main functionalities: content-based filtering for movie recommendations, weighted rating calculation for top-rated movies, and collaborative filtering for rating predictions. The system uses the TMDB 5000 Movie Dataset and features a user-friendly interface styled to match Netflix's aesthetic.
+The application demonstrates the practical implementation of various machine learning techniques in creating a recommendation system, combining both content-based and collaborative filtering approaches to provide comprehensive movie suggestions to users.
 
