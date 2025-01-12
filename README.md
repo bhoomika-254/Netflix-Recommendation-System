@@ -1,7 +1,7 @@
 # Netflix Recommendation System 🎥🍿
 This project is designed to provide personalized movie recommendations using three different techniques: Demographic Filtering, Content-Based Filtering, and Collaborative Filtering. The system is built using Python, Streamlit, and machine learning libraries like Scikit-learn and Surprise.
 
-![image](https://github.com/user-attachments/assets/7f6cb09c-d883-4cf6-bab7-d4a29dc5890f)
+![image](https://github.com/user-attachments/assets/b05d8846-c58c-44d3-9b1a-e9b5106839e2)
 
 # Features:
 - Netflix-Themed UI: A sleek and modern interface inspired by Netflix.
