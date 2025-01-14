@@ -3,6 +3,8 @@ A sophisticated movie recommendation system built with Python and Gradio, featur
 
 ![image](https://github.com/user-attachments/assets/b968eb73-ce01-4dab-a25f-e500d429583b)
 
+# Link to the project - [https://huggingface.co/spaces/bhoomika19/Netflix-Recommendation-System]
+
 # Features:
 - Netflix-Themed UI: A sleek and modern interface inspired by Netflix.
 - Three Recommendation Techniques:
